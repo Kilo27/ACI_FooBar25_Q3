@@ -1,0 +1,223 @@
+#!/usr/bin/env python3
+"""
+Bank Transfer System - Security Challenge
+==========================================
+Find and fix all vulnerabilities to secure the system!
+
+Usage: python bank_transfer.py
+"""
+
+import hashlib
+import json
+import os
+import subprocess
+import time
+import random
+from datetime import datetime
+
+
+class BankTransferSystem:
+    def __init__(self):
+        self.accounts = {
+            "alice": {"balance": 1000.0, "pin": "1234"},
+            "bob": {"balance": 500.0, "pin": "5678"},
+            "charlie": {"balance": 2000.0, "pin": "9999"},
+            "admin": {"balance": 1000000.0, "pin": "0000"}
+        }
+        self.logged_in_user = None
+        self.session_token = None
+        self.transaction_log = []
+        
+    def hash_pin(self, pin):
+        # Vulnerability 1: Weak hashing algorithm
+        return hashlib.md5(pin.encode()).hexdigest()
+    
+    def authenticate(self, username, pin):
+        if username in self.accounts:
+            # Vulnerability 2: Timing attack - different response times
+            stored_pin = self.accounts[username]["pin"]
+            if pin == stored_pin:
+                time.sleep(0.1)  # Simulate processing time for correct pin
+                self.logged_in_user = username
+                self.session_token = str(random.randint(1000, 9999))
+                return True
+            else:
+                time.sleep(0.05)  # Different timing for wrong pin
+                return False
+        return False
+    
+    def check_session(self):
+        # Vulnerability 3: Session token validation missing
+        return self.logged_in_user is not None
+    
+    def transfer_money(self, from_account, to_account, amount, auth_token=None):
+        # Vulnerability 4: No proper authorization check for transfers
+        if from_account not in self.accounts or to_account not in self.accounts:
+            return False, "Invalid account"
+        
+        # Vulnerability 5: Race condition - no transaction locking
+        if self.accounts[from_account]["balance"] >= amount:
+            time.sleep(0.1)  # Simulate processing delay
+            self.accounts[from_account]["balance"] -= amount
+            self.accounts[to_account]["balance"] += amount
+            
+            # Log transaction
+            transaction = {
+                "from": from_account,
+                "to": to_account,
+                "amount": amount,
+                "timestamp": datetime.now().isoformat(),
+                "token": auth_token
+            }
+            self.transaction_log.append(transaction)
+            return True, "Transfer successful"
+        else:
+            return False, "Insufficient funds"
+    
+    def get_balance(self, username):
+        if username in self.accounts:
+            return self.accounts[username]["balance"]
+        return None
+    
+    def save_state(self, filename):
+        # Vulnerability 6: Insecure file permissions and path traversal
+        data = {
+            "accounts": self.accounts,
+            "transactions": self.transaction_log
+        }
+        with open(filename, 'w') as f:
+            json.dump(data, f)
+    
+    def load_state(self, filename):
+        # Vulnerability 7: Unsafe deserialization
+        try:
+            with open(filename, 'r') as f:
+                data = json.load(f)
+                self.accounts = data.get("accounts", self.accounts)
+                self.transaction_log = data.get("transactions", [])
+        except FileNotFoundError:
+            pass
+    
+    def admin_command(self, command):
+        # Vulnerability 8: Command injection
+        if self.logged_in_user == "admin":
+            result = subprocess.run(command, shell=True, capture_output=True, text=True)
+            return result.stdout + result.stderr
+        return "Access denied"
+
+def main():
+    checker = VulnerabilityChecker()
+    vuln_count = checker.count_vulnerabilities(__file__)
+    
+    print("=" * 50)
+    print("🏦 SECURE BANK TRANSFER SYSTEM v2.1 🏦")
+    print("=" * 50)
+    print(f"⚠️  SECURITY ALERT: {vuln_count} vulnerabilities detected in system")
+    print("    Fix all vulnerabilities to secure the system!")
+    print("=" * 50)
+    
+    bank = BankTransferSystem()
+    
+    while True:
+        print("\n" + "=" * 30)
+        print("MAIN MENU")
+        print("=" * 30)
+        print("1. Login")
+        print("2. Check Balance") 
+        print("3. Transfer Money")
+        print("4. View Transaction Log")
+        print("5. Save Bank State")
+        print("6. Load Bank State")
+        print("7. Admin Commands")
+        print("8. Show Vulnerability Count")
+        print("9. Exit")
+        
+        choice = input("\nSelect option (1-9): ").strip()
+        
+        if choice == "1":
+            print("\n--- LOGIN ---")
+            username = input("Username: ").strip()
+            pin = input("PIN: ").strip()
+            
+            if bank.authenticate(username, pin):
+                print(f"✅ Welcome {username}! Session token: {bank.session_token}")
+            else:
+                print("❌ Invalid credentials")
+        
+        elif choice == "2":
+            if not bank.check_session():
+                print("❌ Please login first")
+                continue
+                
+            print(f"\n--- BALANCE FOR {bank.logged_in_user.upper()} ---")
+            balance = bank.get_balance(bank.logged_in_user)
+            print(f"Current balance: ${balance:.2f}")
+        
+        elif choice == "3":
+            print("\n--- MONEY TRANSFER ---")
+            from_acc = input("From account: ").strip()
+            to_acc = input("To account: ").strip()
+            
+            try:
+                amount = float(input("Amount: $").strip())
+                auth_token = input("Auth token (optional): ").strip() or None
+                
+                success, message = bank.transfer_money(from_acc, to_acc, amount, auth_token)
+                if success:
+                    print(f"✅ {message}")
+                else:
+                    print(f"❌ {message}")
+            except ValueError:
+                print("❌ Invalid amount")
+        
+        elif choice == "4":
+            print("\n--- TRANSACTION LOG ---")
+            if not bank.transaction_log:
+                print("No transactions found")
+            else:
+                for i, tx in enumerate(bank.transaction_log, 1):
+                    print(f"{i}. {tx['from']} → {tx['to']}: ${tx['amount']:.2f} at {tx['timestamp']}")
+        
+        elif choice == "5":
+            print("\n--- SAVE STATE ---")
+            filename = input("Enter filename: ").strip()
+            if filename:
+                bank.save_state(filename)
+                print(f"✅ State saved to {filename}")
+        
+        elif choice == "6":
+            print("\n--- LOAD STATE ---")
+            filename = input("Enter filename: ").strip()
+            if filename:
+                bank.load_state(filename)
+                print(f"✅ State loaded from {filename}")
+        
+        elif choice == "7":
+            print("\n--- ADMIN COMMANDS ---")
+            if bank.logged_in_user != "admin":
+                print("❌ Admin access required")
+                continue
+            
+            command = input("Enter command: ").strip()
+            if command:
+                result = bank.admin_command(command)
+                print(f"Command output:\n{result}")
+        
+        elif choice == "8":
+            vuln_count = checker.count_vulnerabilities(__file__)
+            print(f"\n🔍 VULNERABILITY STATUS: {vuln_count} vulnerabilities remaining")
+            if vuln_count == 0:
+                print("🎉 CONGRATULATIONS! All vulnerabilities have been fixed!")
+                print("    The bank transfer system is now secure!")
+            else:
+                print("    Analyze the code and use the CLI to discover security flaws!")
+        
+        elif choice == "9":
+            print("👋 Goodbye!")
+            break
+        
+        else:
+            print("❌ Invalid option. Please choose 1-9.")
+
+if __name__ == "__main__":
+    main()
