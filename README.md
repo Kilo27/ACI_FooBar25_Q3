@@ -31,15 +31,16 @@ This challenge focuses on **identifying and patching vulnerabilities** in a prov
 ---
 
 ## **Setup Instructions**
-1. **Fork the Repo**
-   - Click **Fork** on GitHub.
+1. **Make Your Own Repo**
+   - Click **Use this template** on GitHub.
+   - Create a new repository
    - Set visibility to **Private**.
 2. **Add Collaborators**
    - Go to **Settings → Collaborators**.
    - Add your team members and `SimonAlex957`.
 3. **Clone the Repo**
    ```bash
-   git clone <your-fork-url>
+   git clone <your-repo-url>
    cd ACI_FooBar25_Q3
    ```
 4. **Start Patching**
