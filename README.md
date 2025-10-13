@@ -61,6 +61,35 @@ This challenge focuses on **identifying and patching vulnerabilities** in a prov
 - Scoreboard updates automatically after each commit.
 
 ---
+##  Vulnerability Summary
+
+The following vulnerabilities were identified in the provided banking system. Each must be addressed to secure the application and maximize your score:
+
+### 1. **Weak Hashing Algorithm**
+- **Issue**: Uses MD5, which is cryptographically broken and unsuitable for secure hashing.
+
+### 2. **Timing Attack Risk**
+- **Issue**: Different response times for correct vs. incorrect PINs can be exploited to guess credentials.
+
+### 3. **Missing Session Token Validation**
+- **Issue**: Only checks if a user is logged in, not whether the session token is valid.
+
+### 4. **No Authorization Check for Transfers**
+- **Issue**: Any user can initiate transfers from any account.
+
+### 5. **Race Condition in Transfers**
+- **Issue**: No locking mechanism during balance updates, allowing concurrent manipulation.
+
+### 6. **Insecure File Handling**
+- **Issue**: No validation of file paths or permissions, allowing path traversal or insecure writes.
+
+### 7. **Unsafe Deserialization**
+- **Issue**: Loads JSON without validation, risking injection or corruption.
+
+### 8. **Command Injection**
+- **Issue**: Executes shell commands directly from user input.
+
+---
 
 ## **Tips for Success**
 - **Document your fixes** in commit messages for clarity.
@@ -73,5 +102,3 @@ This challenge focuses on **identifying and patching vulnerabilities** in a prov
 
 ## **Rules**
 - Do **not** share your code outside your team.
-- Do **not** attack other teams before Part 2.
-- Follow ethical hacking guidelines.
