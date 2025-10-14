@@ -1,8 +1,8 @@
 #!/usr/bin/env python3
 """
-Bank Transfer System - Security Challenge
-==========================================
-Find and fix all vulnerabilities to secure the system!
+Bank Transfer System
+====================
+Simple bank transfer simulation.
 
 Usage: python bank_transfer.py
 """
@@ -15,7 +15,6 @@ import time
 import random
 from datetime import datetime
 
-
 class BankTransferSystem:
     def __init__(self):
         self.accounts = {
@@ -27,10 +26,10 @@ class BankTransferSystem:
         self.logged_in_user = None
         self.session_token = None
         self.transaction_log = []
-        
+
     def hash_pin(self, pin):
         return hashlib.md5(pin.encode()).hexdigest()
-    
+
     def authenticate(self, username, pin):
         if username in self.accounts:
             stored_pin = self.accounts[username]["pin"]
@@ -43,20 +42,19 @@ class BankTransferSystem:
                 time.sleep(0.05)
                 return False
         return False
-    
+
     def check_session(self):
         return self.logged_in_user is not None
-    
+
     def transfer_money(self, from_account, to_account, amount, auth_token=None):
         if from_account not in self.accounts or to_account not in self.accounts:
             return False, "Invalid account"
-        
+
         if self.accounts[from_account]["balance"] >= amount:
-            time.sleep(0.1) 
+            time.sleep(0.1)
             self.accounts[from_account]["balance"] -= amount
             self.accounts[to_account]["balance"] += amount
-            
-            # Log transaction
+
             transaction = {
                 "from": from_account,
                 "to": to_account,
@@ -68,12 +66,12 @@ class BankTransferSystem:
             return True, "Transfer successful"
         else:
             return False, "Insufficient funds"
-    
+
     def get_balance(self, username):
         if username in self.accounts:
             return self.accounts[username]["balance"]
         return None
-    
+
     def save_state(self, filename):
         data = {
             "accounts": self.accounts,
@@ -81,7 +79,7 @@ class BankTransferSystem:
         }
         with open(filename, 'w') as f:
             json.dump(data, f)
-    
+
     def load_state(self, filename):
         try:
             with open(filename, 'r') as f:
@@ -90,7 +88,7 @@ class BankTransferSystem:
                 self.transaction_log = data.get("transactions", [])
         except FileNotFoundError:
             pass
-    
+
     def admin_command(self, command):
         if self.logged_in_user == "admin":
             result = subprocess.run(command, shell=True, capture_output=True, text=True)
@@ -98,62 +96,55 @@ class BankTransferSystem:
         return "Access denied"
 
 def main():
-    checker = VulnerabilityChecker()
-    vuln_count = checker.count_vulnerabilities(__file__)
-    
     print("=" * 50)
-    print("🏦 SECURE BANK TRANSFER SYSTEM v2.1 🏦")
+    print("🏦 BANK TRANSFER SYSTEM v2.1 🏦")
     print("=" * 50)
-    print(f"⚠️  SECURITY ALERT: {vuln_count} vulnerabilities detected in system")
-    print("    Fix all vulnerabilities to secure the system!")
-    print("=" * 50)
-    
+
     bank = BankTransferSystem()
-    
+
     while True:
-        print("\n" + "=" * 30)
+        print("" + "=" * 30)
         print("MAIN MENU")
         print("=" * 30)
         print("1. Login")
-        print("2. Check Balance") 
+        print("2. Check Balance")
         print("3. Transfer Money")
         print("4. View Transaction Log")
         print("5. Save Bank State")
         print("6. Load Bank State")
         print("7. Admin Commands")
-        print("8. Show Vulnerability Count")
-        print("9. Exit")
-        
-        choice = input("\nSelect option (1-9): ").strip()
-        
+        print("8. Exit")
+
+        choice = input("Select option (1-8): ").strip()
+
         if choice == "1":
-            print("\n--- LOGIN ---")
+            print("--- LOGIN ---")
             username = input("Username: ").strip()
             pin = input("PIN: ").strip()
-            
+
             if bank.authenticate(username, pin):
                 print(f"✅ Welcome {username}! Session token: {bank.session_token}")
             else:
                 print("❌ Invalid credentials")
-        
+
         elif choice == "2":
             if not bank.check_session():
                 print("❌ Please login first")
                 continue
-                
-            print(f"\n--- BALANCE FOR {bank.logged_in_user.upper()} ---")
+
+            print(f"--- BALANCE FOR {bank.logged_in_user.upper()} ---")
             balance = bank.get_balance(bank.logged_in_user)
             print(f"Current balance: ${balance:.2f}")
-        
+
         elif choice == "3":
-            print("\n--- MONEY TRANSFER ---")
+            print("--- MONEY TRANSFER ---")
             from_acc = input("From account: ").strip()
             to_acc = input("To account: ").strip()
-            
+
             try:
                 amount = float(input("Amount: $").strip())
                 auth_token = input("Auth token (optional): ").strip() or None
-                
+
                 success, message = bank.transfer_money(from_acc, to_acc, amount, auth_token)
                 if success:
                     print(f"✅ {message}")
@@ -161,56 +152,46 @@ def main():
                     print(f"❌ {message}")
             except ValueError:
                 print("❌ Invalid amount")
-        
+
         elif choice == "4":
-            print("\n--- TRANSACTION LOG ---")
+            print("--- TRANSACTION LOG ---")
             if not bank.transaction_log:
                 print("No transactions found")
             else:
                 for i, tx in enumerate(bank.transaction_log, 1):
                     print(f"{i}. {tx['from']} → {tx['to']}: ${tx['amount']:.2f} at {tx['timestamp']}")
-        
+
         elif choice == "5":
-            print("\n--- SAVE STATE ---")
+            print("--- SAVE STATE ---")
             filename = input("Enter filename: ").strip()
             if filename:
                 bank.save_state(filename)
                 print(f"✅ State saved to {filename}")
-        
+
         elif choice == "6":
-            print("\n--- LOAD STATE ---")
+            print("--- LOAD STATE ---")
             filename = input("Enter filename: ").strip()
             if filename:
                 bank.load_state(filename)
                 print(f"✅ State loaded from {filename}")
-        
+
         elif choice == "7":
-            print("\n--- ADMIN COMMANDS ---")
+            print("--- ADMIN COMMANDS ---")
             if bank.logged_in_user != "admin":
                 print("❌ Admin access required")
                 continue
-            
+
             command = input("Enter command: ").strip()
             if command:
                 result = bank.admin_command(command)
-                print(f"Command output:\n{result}")
-        
+                print(f"Command output:{result}")
+
         elif choice == "8":
-            vuln_count = checker.count_vulnerabilities(__file__)
-            print(f"\n🔍 VULNERABILITY STATUS: {vuln_count} vulnerabilities remaining")
-            if vuln_count == 0:
-                print("🎉 CONGRATULATIONS! All vulnerabilities have been fixed!")
-                print("    The bank transfer system is now secure!")
-            else:
-                print("    Analyze the code and use the CLI to discover security flaws!")
-        
-        elif choice == "9":
             print("👋 Goodbye!")
             break
-        
+
         else:
-            print("❌ Invalid option. Please choose 1-9.")
+            print("❌ Invalid option. Please choose 1-8.")
 
 if __name__ == "__main__":
-
     main()
