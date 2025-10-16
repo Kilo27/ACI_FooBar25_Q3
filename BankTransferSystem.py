@@ -28,7 +28,7 @@ class BankTransferSystem:
         self.transaction_log = []
 
     def hash_pin(self, pin):
-        return hashlib.md5(pin.encode()).hexdigest()
+        return hashlib.sha256(pin.encode()).hexdigest() #replaced md5 with sha256 for better security
 
     def authenticate(self, username, pin):
         if username in self.accounts:
